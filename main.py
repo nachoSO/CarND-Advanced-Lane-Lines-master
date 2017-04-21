@@ -32,6 +32,7 @@ def process_image_pipeline(image):
     (highlights == 255) |((mag_binary == 1) & (dir_binary == 1))] = 1
 
     global left_lane, right_lane,first_time,frame_counter,curve_radius
+    
     warped,Minv=w.perspective_transform(combined)
 
     if(first_time==True):
