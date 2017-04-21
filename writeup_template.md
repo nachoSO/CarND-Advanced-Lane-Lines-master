@@ -183,7 +183,7 @@ def measure_curvature(binary_warped, left_lane, right_lane):
     # Now our radius of curvature is in meters
     curve_radius = round((left_curverad + right_curverad)/2)
 ```
-In the function in charge of find the lanes we saved the x and y values for detected line pixels, then the only step to do, is fit that points into real world space and then calculate the radius of the curvature.
+In the function `sliding_line_finding` and `line_finding_after_sliding` we saved the x and y values for detected line pixels, the only step to do, is fit that points into real world space and then calculate the radius of the curvature.
 
 With the scope to calculate the position of the vehicle with respect the center
 
