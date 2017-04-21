@@ -88,10 +88,10 @@ def main():
     imgpoints = dist_pickle["imgpoints"]
     mtx = dist_pickle['mtx']
     dist = dist_pickle['dist']
-    img = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/test_images/straight_lines1.jpg')
+    img = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/camera_cal/calibration1.jpg')
 
     #calibrate_camera()
-    #test_cal(img,objpoints,imgpoints)
+    test_cal(img,objpoints,imgpoints)
 
 if __name__ == "__main__":
     main()

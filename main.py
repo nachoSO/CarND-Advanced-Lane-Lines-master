@@ -42,7 +42,7 @@ def process_image_pipeline(image):
     first_time=False
     img=lf.draw(warped, left_lane, right_lane, image, Minv)
     
-    if(frame_counter>=15):
+    if(frame_counter>=10):
         curve_radius = lf.measure_curvature(warped,left_lane,right_lane)
         frame_counter=0
       
