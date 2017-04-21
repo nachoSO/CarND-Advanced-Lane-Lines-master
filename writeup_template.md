@@ -61,21 +61,23 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 ###Pipeline (single images)
 
 ## 1. Provide an example of a distortion-corrected image.
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
+To demonstrate this step, I will describe how I applied the distortion correction to one of the test images like this one:
 <p align="center">
-  <img src="./output_images/road_before_distortion.jpg" alt="birdeye_view" width="60%" height="60%">
+  <img src="./output_images/road_before_distortion.jpg" width="60%" height="60%">
 </p> 
 
 The first step was load the camera matrix and distortion coefficients that we computed in the previous step. Doing so, we can undistort the image correctly. An example of distortion-correction can be found in the following image:
 <p align="center">
-  <img src="./output_images/road_after_distortion.jpg" alt="birdeye_view" width="60%" height="60%">
+  <img src="./output_images/road_after_distortion.jpg" width="60%" height="60%">
 </p> 
 
 
 ## 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
 
-![alt text][image3]
+<p align="center">
+  <img src="./output_images/thresholded.png" width="60%" height="60%">
+</p> 
 
 ## 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
@@ -122,7 +124,11 @@ I verified that my perspective transform was working as expected by drawing the 
 
 ## 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-The code can be found in the file `line_finding.py`.
+In the moment in which we have a thresholded warped image we can map the lane lines. The method used in this project is based on the blind search method, this method checks which are the peaks in the histogram of the image, in this way we can detect which pixels belong the lane.
+
+Then, instead of step through the windows one by one I've implemented the function that find in a margin around the previous line position (based on the course slides!).
+
+The code can be found in the file `line_finding.py`, in the functions `sliding_line_finding` and `line_finding_after_sliding`. An example of this identification is shown below.
 <p align="center">
    <img src="./output_images/histogram lane_detected.png" width="70%" height="70%">
 </p>
@@ -174,7 +180,7 @@ I implemented this step following the tips given in the course, the correspondin
 
 ###Pipeline (video)
 
-####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
+## 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
 Here's a [link to my video result](./project_video.mp4)
 
@@ -182,7 +188,7 @@ Here's a [link to my video result](./project_video.mp4)
 
 ###Discussion
 
-####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+## 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
 
