@@ -122,9 +122,7 @@ I verified that my perspective transform was working as expected by drawing the 
 
 ## 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
-
-
+The code can be found in the file `line_finding.py`.
 <p align="center">
    <img src="./output_images/histogram lane_detected.png" width="70%" height="70%">
 </p>
@@ -136,7 +134,35 @@ Then I did some other stuff and fit my lane lines with a 2nd order polynomial ki
 
 ## 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+I did this in lines 170 through 191 in my code in `line_finding.py`, `function measure_curvature()`.
+
+In order to compute the radius of curvature I've followed the steps detailed in the course, that is,
+
+```
+def measure_curvature(binary_warped, left_lane, right_lane):
+    ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
+    y_eval = np.max(ploty)
+    ym_per_pix = 30/720 # meters per pixel in y dimension
+    xm_per_pix = 3.7/700 # meters per pixel in x dimension
+    
+    leftx = left_lane.allx
+    lefty = left_lane.ally
+    rightx = right_lane.allx
+    righty = right_lane.ally
+    
+    # Fit new polynomials to x,y in world space
+    left_fit_cr = np.polyfit(lefty*ym_per_pix, leftx*xm_per_pix, 2)
+    right_fit_cr = np.polyfit(righty*ym_per_pix, rightx*xm_per_pix, 2)
+
+    # Calculate the new radii of curvature
+    left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+    right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+    # Now our radius of curvature is in meters
+    curve_radius = round((left_curverad + right_curverad)/2)
+```
+In the function in charge of find the lanes we saved the x and y values for detected line pixels, then the only step to do, is fit that points into real world space and then calculate the radius of the curvature.
+
+With the scope to calculate the position of the vehicle with respect the center
 
 ## 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
