@@ -41,14 +41,22 @@ I start by preparing "object points", which will be the (x, y, z) coordinates of
 
 I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
 
-<p align="center">
-  <img src="./output_images/chess_before_calibration.jpg" alt="birdeye_view" width="60%" height="60%">
-</p>
-
-
-<p align="center">
-  <img src="./output_images/chess_after_calibration.jpg" alt="birdeye_view" width="60%" height="60%">
-</p>
+<table style="width:100%">
+  <tr>
+    <th>
+      <p align="center">
+           <img src="./output_images/chess_before_calibration.jpg" width="60%" height="60%">
+           <br>Chessboard before calibration
+      </p>
+    </th>
+    <th>
+      <p align="center">
+           <img src="./output_images/chess_after_calibration.jpg" width="60%" height="60%">
+           <br>Chessboard after calibration
+      </p>
+    </th>
+  </tr>
+</table>
 
 ###Pipeline (single images)
 
@@ -71,47 +79,74 @@ I used a combination of color and gradient thresholds to generate a binary image
 
 ## 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+The code for my perspective transform is allocated in the file 'warp.py includes a function called `perspective_transform()`, which appears in lines 1 through 49. The `perspective_transform()` function takes as inputs an image (`img`) and returns the image with the perspective transformed and the inverse transformed in order to draw later the road. I chose the hardcode the source and destination points in the following manner:
 
 ```
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
+    src = np.float32([[220, 700],
+                      [555, 470],
+                      [730, 470],
+                      [1090, 700]])
+
+    # Choose x positions that allow for 3.7m for the lane position closest to car.
+    dst = np.float32([[ 212,  700],
+                      [ 212,    0],
+                      [ 1086,    0],
+                      [ 1086,  700]])
 
 ```
 This resulted in the following source and destination points:
 
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+| 220, 700      | 212, 700      | 
+| 555, 470      | 212, 0        |
+| 730, 470      | 1086, 0       |
+| 1090, 700     | 1086, 700     |
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image as can be seen in the next image.
 
-![alt text][image4]
+<table style="width:100%">
+  <tr>
+    <th>
+      <p align="center">
+           <img src="./output_images/straight_non_warped.jpg" width="60%" height="60%">
+      </p>
+    </th>
+    <th>
+      <p align="center">
+           <img src="./output_images/straight_warped.jpg" width="60%" height="60%">
+      </p>
+    </th>
+  </tr>
+</table>
 
-####4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+## 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
 Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
 
-![alt text][image5]
 
-####5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
+<table style="width:100%">
+  <tr>
+    <th>
+      <p align="center">
+           <img src="./output_images/histogram lane_detected.jpg" width="60%" height="60%">
+      </p>
+    </th>
+    <th>
+      <p align="center">
+           <img src="./output_images/lane_detected.jpg" width="60%" height="60%">
+      </p>
+    </th>
+  </tr>
+</table>
+
+## 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
 I did this in lines # through # in my code in `my_other_file.py`
 
-####6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+## 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+I implemented this step following the tips given in the course, the corresponding im in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
 
 ![alt text][image6]
 
