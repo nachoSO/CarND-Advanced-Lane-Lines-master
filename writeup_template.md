@@ -65,7 +65,7 @@ To demonstrate this step, I will describe how I applied the distortion correctio
   <img src="./output_images/road_before_distortion.jpg" width="60%" height="60%">
 </p> 
 
-The first step was load the camera matrix and distortion coefficients that we computed in the previous step. Doing so, we can undistort the image correctly. An example of distortion-correction can be found in the following image:
+The first step was load the camera matrix and distortion coefficients that I computed in the previous step. Doing so, we can undistort the image correctly. An example of distortion-correction can be found in the next image:
 <p align="center">
   <img src="./output_images/road_after_distortion.jpg" width="60%" height="60%">
 </p> 
@@ -74,6 +74,11 @@ The first step was load the camera matrix and distortion coefficients that we co
 ## 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
 I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines 10 through 77 in `preprocess.py`). Moreover I applied also two more techniques, the first one extracts the yellow pixels from the image and the other one extracts the highlighted pixels from the image, I have taken those two functions from the forum but unfortunately I lost the link (I'm sorry for the author), it works pretty well!
+
+I used a combination of color and gradient thresholds in order to generate a binary image (thresholding steps at lines 10 through 77 in `preprocess.py`). Moreover I applied also 
+
+The steps in a nutshell are:
+
 
 Here's an example of my output for this step. 
 
@@ -157,35 +162,53 @@ The code can be found in the file `line_finding.py`, in the functions `sliding_l
 
 ## 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines 170 through 191 in my code in `line_finding.py`, `function measure_curvature()`.
+I did this in lines 170 through 190 in my code in `line_finding.py`, `function measure_curvature()`.
 
 In order to compute the radius of curvature I've followed the steps detailed in the course, that is,
 
 ```
-def measure_curvature(binary_warped, left_lane, right_lane):
+    left_fit=left_lane.current_fit
+    right_fit=right_lane.current_fit
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
     y_eval = np.max(ploty)
     ym_per_pix = 30/720 # meters per pixel in y dimension
     xm_per_pix = 3.7/700 # meters per pixel in x dimension
     
-    leftx = left_lane.allx
-    lefty = left_lane.ally
-    rightx = right_lane.allx
-    righty = right_lane.ally
+    left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
+    right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
     
     # Fit new polynomials to x,y in world space
-    left_fit_cr = np.polyfit(lefty*ym_per_pix, leftx*xm_per_pix, 2)
-    right_fit_cr = np.polyfit(righty*ym_per_pix, rightx*xm_per_pix, 2)
+    left_fit_cr = np.polyfit(ploty*ym_per_pix, left_fitx*xm_per_pix, 2)
+    right_fit_cr = np.polyfit(ploty*ym_per_pix, right_fitx*xm_per_pix, 2)
 
     # Calculate the new radii of curvature
-    left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
-    right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
-    # Now our radius of curvature is in meters
-    curve_radius = round((left_curverad + right_curverad)/2)
+    left_curveradius = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+    right_curveradius = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+    
+    return left_curveradius,right_curveradius
 ```
 In the function `sliding_line_finding` and `line_finding_after_sliding` we saved the x and y values for detected line pixels, the only step to do, is fit that points into real world space and then calculate the radius of the curvature.
 
-With the scope to calculate the position of the vehicle with respect the center
+With the scope to calculate the position of the vehicle with respect to the center, I implemented the following function:
+```
+def compute_offset(binary_warped, left_lane, right_lane):
+
+    left_fit=left_lane.current_fit
+    right_fit=right_lane.current_fit
+    ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
+    
+    left_fitx = left_fit[0]*binary_warped.shape[0]**2 + left_fit[1]*binary_warped.shape[0] + left_fit[2]
+    right_fitx = right_fit[0]*binary_warped.shape[0]**2 + right_fit[1]*binary_warped.shape[0] + right_fit[2]
+    xm_per_pix = 3.7/700 
+    
+    #center of the image
+    center_img = binary_warped.shape[1]/2
+
+    #cam position respect to the center
+    center_cam = (left_fitx+right_fitx)/2
+    center_pos = (center_cam-center_img)*xm_per_pix    
+    return center_pos
+```
 
 ## 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
@@ -207,5 +230,19 @@ Here's a [link to my video result](./project_video.mp4)
 
 ## 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+Firstly, I would like to briefly enumerate the steps that I followed in order to tackle with the project.
+1) Calibration & Undistortion
+2) Image Binarization (color+gradient thresholding) 
+3) Perspective transformation
+4) Sliding windows and fit a polynomial in order to detect the lane lines
 
+# Issues and potential problems:
+- It was very hard for me to find a good combination of color and gradient threshold for obtaining a binary image, there were moments in the video in which the lanes went out, fortunately it is solved. From my experience this is one of the most important steps in the pipeline.
+- I think that, if the video captures frames with noisy lines/lanes, the detection could be bad. It is worth it to mention that, if there are not lane/lines in the road I don't expect nothing good as output :S
+- If the car changes the lane there will be moments in which the detection will be bad
+
+# Future Work:
+- Implement the sanity check, i.e, check if the lines makes senses for each frame processed or if the line make sense with respect the precedence detections...
+- I would like to know which is the best combination of thresholds to obtain the best quality binarize image (the binary image that can cover almost all road scenaries).
+- Approach the challenges proposed (unfortunately I have no time, and I would like to approach the next project before the incoming deadlines).
+- Improve and clean the code pipeline and the line class, it would be nice to adapt this class in order to cover all the mentioned above issues.
