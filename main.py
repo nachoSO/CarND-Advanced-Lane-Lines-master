@@ -20,8 +20,8 @@ def process_image_pipeline(image):
     image = cc.calibrate_image(image)
     window = image[0:, :, :]
     # Apply each of the thresholding functions
-    #gradx = pre.abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(20, 100))
-    #grady = pre.abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(20, 100))
+    gradx = pre.abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(20, 100))
+    grady = pre.abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(20, 100))
     mag_binary = pre.mag_thresh(image, sobel_kernel=ksize, mag_thresh=(40, 100))
     dir_binary = pre.dir_threshold(image, sobel_kernel=ksize, thresh=(0.7, 1.3))
 
@@ -77,18 +77,18 @@ def main():
     frame_counter=15
     first_time=True
     clip = VideoFileClip('project_video.mp4')
-    # out=clip.fl_image(lambda frame: process_image_pipeline(frame))
-    # out.write_videofile('out_project_video.mp4', audio=False, verbose=False)
+    out=clip.fl_image(lambda frame: process_image_pipeline(frame))
+    out.write_videofile('out_project_video.mp4', audio=False, verbose=False)
     
     #single image test (1,4)
-    img = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/test_images/test4.jpg')
-    img = process_image_pipeline(img)
-    f, ax1 = plt.subplots(1, 1, figsize=(24, 9))
-    f.tight_layout()
-    ax1.imshow(img)
-    ax1.set_title('Original Image', fontsize=50)  
-    plt.show()
-    cv2.imwrite('asdadadsa.jpg', img)
+    # img = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/test_images/test4.jpg')
+    # img = process_image_pipeline(img)
+    # f, ax1 = plt.subplots(1, 1, figsize=(24, 9))
+    # f.tight_layout()
+    # ax1.imshow(img)
+    # ax1.set_title('Original Image', fontsize=50)  
+    # plt.show()
+    # cv2.imwrite('asdadadsa.jpg', img)
     
 if __name__ == "__main__":
     main()   

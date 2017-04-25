@@ -27,25 +27,6 @@ def perspective_transform(img):
     cv2.line(img, (555, 470), (730, 470), color, th)
     cv2.line(img, (1250,700), (730, 470), color, th)
 
-    # src = np.float32([[230, 700],
-                      # [595, 450],
-                      # [685, 450],
-                      # [1090, 700]])
-
-    # # Choose x positions that allow for 3.7m for the lane position closest to car.
-    # dst = np.float32([[ 290,  700],
-                      # [ 290,    0],
-                      # [ 990,    0],
-                      # [ 990,  700]])
-                      
-    # color=[0, 255, 0]
-    # th=3
-    # cv2.line(img, (230,700), (595,450), color, th)
-    # cv2.line(img, (595,450), (685, 450), color, th)
-    # cv2.line(img, (685, 450), (1090, 700), color, th)
-    # cv2.line(img, (1090,700), (230,700), color, th)
-
-
     M = cv2.getPerspectiveTransform(src, dst)
     Minv = cv2.getPerspectiveTransform(dst,src)
 
