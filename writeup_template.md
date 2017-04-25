@@ -65,20 +65,36 @@ To demonstrate this step, I will describe how I applied the distortion correctio
   <img src="./output_images/road_before_distortion.jpg" width="60%" height="60%">
 </p> 
 
-The first step was load the camera matrix and distortion coefficients that I computed in the previous step. Doing so, we can undistort the image correctly. An example of distortion-correction can be found in the next image:
+The first step was load the camera matrix and distortion coefficients that I computed in the previous step then the only thing to do is convert the image into grayscale. Doing so, we can undistort the image correctly with the opencv function cv2.undistort. An example of distortion-correction can be found in the next image:
 <p align="center">
   <img src="./output_images/road_after_distortion.jpg" width="60%" height="60%">
 </p> 
 
+The example provided can be found in the file called camera_cal.py
 
 ## 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines 10 through 77 in `preprocess.py`). Moreover I applied also two more techniques, the first one extracts the yellow pixels from the image and the other one extracts the highlighted pixels from the image, I have taken those two functions from the forum but unfortunately I lost the link (I'm sorry for the author), it works pretty well!
+I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines 23 through 33 in `main.py`). The process that I followed, is the next:
+```
+    # Apply each of the thresholding functions
+    gradx = pre.abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(20, 100))
+    grady = pre.abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(20, 100))
+    mag_binary = pre.mag_thresh(image, sobel_kernel=ksize, mag_thresh=(40, 100))
+    dir_binary = pre.dir_threshold(image, sobel_kernel=ksize, thresh=(0.7, 1.3))
 
-I used a combination of color and gradient thresholds in order to generate a binary image (thresholding steps at lines 10 through 77 in `preprocess.py`). Moreover I applied also 
+    #threshold on the saturation channel
+    s_threshold = pre.hls_select(image, thresh=(150, 255))        
+    
+    combined = np.zeros_like(dir_binary)
 
-The steps in a nutshell are:
+    combined[(((mag_binary == 1) & (dir_binary == 1))  ) | (s_threshold==1)] = 1
+```
+First I
+then a di
+and finally is applied a binary combination between the gradient thresholds and the color threshold.
+All the functions that I used are implemented in the file `preprocess.py`.
 
+In the future I would like to improve this part of the project. It is still unclear to me which is the best threshold combination!!
 
 Here's an example of my output for this step. 
 
@@ -99,7 +115,7 @@ Here's an example of my output for this step.
   </tr>
 </table>
 
- 
+This is the best combination that I've obtained (I've tried a lot of combinations...)
 
 ## 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
@@ -146,11 +162,11 @@ I verified that my perspective transform was working as expected by drawing the 
 
 ## 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-In the moment in which we have a thresholded warped image we can map the lane lines. The method used in this project is based on the blind search method, this method checks which are the peaks in the histogram of the image, in this way we can detect which pixels belong the lane.
+In the moment in which we have a thresholded warped image we can map the lane lines. The method used in this project is based on the blind search method, this method checks which are the peaks in the histogram of the image, in this way we can detect which pixels belong to the lane.
 
-Then, instead of step through the windows one by one I've implemented the function that find in a margin around the previous line position (based on the course slides!).
+Then, instead of step through the windows one by one I've implemented the function that find in a margin around the previous line position (based on the course slides!). However, for the sake of simplicity I prefered to use only the previous one, because I did not implemented the sanity check function (I don't want to lose the lane never!)
 
-The code can be found in the file `line_finding.py`, in the functions `sliding_line_finding` and `line_finding_after_sliding`. An example of this identification is shown below.
+The code can be found in the file `line_finding.py`, in the function `sliding_line_finding`. An example of this lane lines identification is shown below.
 <p align="center">
    <img src="./output_images/histogram lane_detected.png" width="70%" height="70%">
 </p>
@@ -162,11 +178,13 @@ The code can be found in the file `line_finding.py`, in the functions `sliding_l
 
 ## 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines 170 through 190 in my code in `line_finding.py`, `function measure_curvature()`.
+I did this in lines 167 through 187 in my code in `line_finding.py`, `function measure_curvature()`.
 
 In order to compute the radius of curvature I've followed the steps detailed in the course, that is,
 
 ```
+def measure_curvature(binary_warped, left_lane, right_lane):
+
     left_fit=left_lane.current_fit
     right_fit=right_lane.current_fit
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
@@ -187,7 +205,7 @@ In order to compute the radius of curvature I've followed the steps detailed in 
     
     return left_curveradius,right_curveradius
 ```
-In the function `sliding_line_finding` and `line_finding_after_sliding` we saved the x and y values for detected line pixels, the only step to do, is fit that points into real world space and then calculate the radius of the curvature.
+In the function `sliding_line_finding` I saved the x and y values for detected line pixels, the only step to do, is fit that points into real world space and then calculate the radius of the curvature.
 
 With the scope to calculate the position of the vehicle with respect to the center, I implemented the following function:
 ```
@@ -209,12 +227,15 @@ def compute_offset(binary_warped, left_lane, right_lane):
     center_pos = (center_cam-center_img)*xm_per_pix    
     return center_pos
 ```
+The first step is take the center of the image, then it is necessary to compute the average point between the left and right lanes based on the bottom of the image. Finally, I computed the center substracting the last two mentioned values and then I converted into meters as is done in the curveradius function.
 
 ## 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step following the tips given in the course, the corresponding im in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+I implemented this step following the tips given in the course, the corresponding im in lines 140 through 165 in my code in `line_finding.py` in the function `draw()`. This function paints the region between the lane lines detected.  Then, lines 64 through 70 in my code in `main.py` in the function `process_image_pipeline` the offset and curvature radius are computed. Here is an example of my result on a test image:
 
-![alt text][image6]
+<p align="center">
+   <img src="./output_images/draw_road.jpg" width="60%" height="60%">
+</p>
 
 ---
 
@@ -222,7 +243,7 @@ I implemented this step following the tips given in the course, the correspondin
 
 ## 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./out_project_video.mp4)
 
 ---
 
@@ -242,7 +263,7 @@ Firstly, I would like to briefly enumerate the steps that I followed in order to
 - If the car changes the lane there will be moments in which the detection will be bad
 
 # Future Work:
-- Implement the sanity check, i.e, check if the lines makes senses for each frame processed or if the line make sense with respect the precedence detections...
-- I would like to know which is the best combination of thresholds to obtain the best quality binarize image (the binary image that can cover almost all road scenaries).
-- Approach the challenges proposed (unfortunately I have no time, and I would like to approach the next project before the incoming deadlines).
-- Improve and clean the code pipeline and the line class, it would be nice to adapt this class in order to cover all the mentioned above issues.
+- Implement the sanity check function, i.e, a function that for each frame processed checks if the frame is correct with respect the previous one. With this function will be possible to use correctly the line_finding_after_sliding() function.
+- I would like to know which is the best combination of thresholds to obtain the best quality binary image (the binary image that can cover almost all road sceneries).
+- I would like also to approach the challenges proposed (unfortunately I have no time, and I would like to cope with the next project before the incoming deadlines).
+- Improve and clean the code pipeline and the line class, it would be nice to adapt the line class in order to cover all the mentioned above issues.
