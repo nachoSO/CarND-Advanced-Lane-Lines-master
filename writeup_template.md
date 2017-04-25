@@ -75,19 +75,24 @@ The example provided can be found in the file called camera_cal.py
 ## 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
 I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines 23 through 33 in `main.py`). The process that I followed, is the next:
+## REVISION CHANGES:
+  - I added two functions in order to detect the lane lines correctly:
+    *1) extract_yellow; extract a yellow mask from the region
+    *2) extract_highlights; extract a highlight mask
+  The idea was taken from the reviewer in the following link: https://medium.com/towards-data-science/robust-lane-finding-using-advanced-computer-vision-techniques-mid-project-update-540387e95ed3 and the code of both functions was obtained from the project (thanks to the reviewer).
+  - The sobel kernels used are changed in the magnitude and direction threshold.
 ```
-    # Apply each of the thresholding functions
     gradx = pre.abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(20, 100))
     grady = pre.abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(20, 100))
-    mag_binary = pre.mag_thresh(image, sobel_kernel=ksize, mag_thresh=(40, 100))
-    dir_binary = pre.dir_threshold(image, sobel_kernel=ksize, thresh=(0.7, 1.3))
+    mag_binary = pre.mag_thresh(image, sobel_kernel=9, mag_thresh=(30, 100))
+    dir_binary = pre.dir_threshold(image, sobel_kernel=15, thresh=(0.7, 1.3))
 
-    #threshold on the saturation channel
-    s_threshold = pre.hls_select(image, thresh=(150, 255))        
-    
+    ylw = pre.extract_yellow(window)
+    highlights = pre.extract_highlights(window[:, :, 0])
+
     combined = np.zeros_like(dir_binary)
-
-    combined[(((mag_binary == 1) & (dir_binary == 1))  ) | (s_threshold==1)] = 1
+    combined[((gradx == 1) & (grady == 1)) | (ylw == 255) | 
+    (highlights == 255) |((mag_binary == 1) & (dir_binary == 1))] = 1
 ```
 All the functions that I used are implemented in the file `preprocess.py`.
 
