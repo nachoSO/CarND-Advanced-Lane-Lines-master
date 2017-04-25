@@ -3,6 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
+import camera_cal as cc
 
 def perspective_transform(img):
 
@@ -11,20 +12,38 @@ def perspective_transform(img):
     src = np.float32([[220, 700],
                       [555, 470],
                       [730, 470],
-                      [1090, 700]])
+                      [1250, 700]])
 
     # Choose x positions that allow for 3.7m for the lane position closest to car.
     dst = np.float32([[ 212,  700],
                       [ 212,    0],
-                      [ 1086,    0],
-                      [ 1086,  700]])
+                      [ 1250,    0],
+                      [ 1250,  700]])
                       
     color=[0, 255, 0]
     th=3
-    cv2.line(img, (220,700), (1090,700), color, th)
+    cv2.line(img, (220,700), (1250,700), color, th)
     cv2.line(img, (220,700), (555, 470), color, th)
     cv2.line(img, (555, 470), (730, 470), color, th)
-    cv2.line(img, (1090,700), (730, 470), color, th)
+    cv2.line(img, (1250,700), (730, 470), color, th)
+
+    # src = np.float32([[230, 700],
+                      # [595, 450],
+                      # [685, 450],
+                      # [1090, 700]])
+
+    # # Choose x positions that allow for 3.7m for the lane position closest to car.
+    # dst = np.float32([[ 290,  700],
+                      # [ 290,    0],
+                      # [ 990,    0],
+                      # [ 990,  700]])
+                      
+    # color=[0, 255, 0]
+    # th=3
+    # cv2.line(img, (230,700), (595,450), color, th)
+    # cv2.line(img, (595,450), (685, 450), color, th)
+    # cv2.line(img, (685, 450), (1090, 700), color, th)
+    # cv2.line(img, (1090,700), (230,700), color, th)
 
 
     M = cv2.getPerspectiveTransform(src, dst)
@@ -49,7 +68,8 @@ def perspective_transform(img):
     return warped,Minv
     
 def main():
-    img_warp = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/test_images/test2.jpg')
+    img_warp = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/test_images/straight_lines1.jpg')
+    img_warp= cc.calibrate_image(img_warp)
     perspective_transform(img_warp)
     
 if __name__ == "__main__":

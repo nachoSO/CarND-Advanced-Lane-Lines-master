@@ -120,7 +120,7 @@ def line_finding_after_sliding(binary_warped,left_lane,right_lane):
     right_fit = right_lane.current_fit
     
     left_lane_inds = ((nonzerox > (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + left_fit[2] - margin)) & (nonzerox < (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + left_fit[2] + margin))) 
-    right_lane_inds = ((nonzerox > (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] - margin)) & (nonzerox < (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] + margin)))  
+    right_lane_inds = ((nonzerox > (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] - margin)) & (nonzerox < (right_fit[0]*(nonzeroy**2) +right_fit[1]*nonzeroy + right_fit[2] + margin)))  
 
     # Again, extract left and right line pixel positions
     left_lane.allx = nonzerox[left_lane_inds]
@@ -131,10 +131,7 @@ def line_finding_after_sliding(binary_warped,left_lane,right_lane):
     # Fit a second order polynomial to each
     left_fit = np.polyfit(left_lane.ally, left_lane.allx, 2)
     right_fit = np.polyfit(right_lane.ally, right_lane.allx, 2)
-    # Generate x and y values for plotting
-    ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
-    left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
-    right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
+
     left_lane.current_fit = left_fit
     right_lane.current_fit = right_fit    
     return left_lane,right_lane
@@ -161,31 +158,50 @@ def draw(binary_warped, left_lane, right_lane, image, Minv):
     cv2.fillPoly(color_warp, np.int_([pts]), (0,255, 0))
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
-    newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0])) 
+    newwarp = cv2.warpPerspective(color_warp, Minv, (binary_warped.shape[1], binary_warped.shape[0])) 
     # Combine the result with the original image
     result = cv2.addWeighted(image, 1, newwarp, 0.3, 0)
     
     return result
     
 def measure_curvature(binary_warped, left_lane, right_lane):
+
+    left_fit=left_lane.current_fit
+    right_fit=right_lane.current_fit
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
     y_eval = np.max(ploty)
     ym_per_pix = 30/720 # meters per pixel in y dimension
     xm_per_pix = 3.7/700 # meters per pixel in x dimension
     
-    leftx = left_lane.allx
-    lefty = left_lane.ally
-    rightx = right_lane.allx
-    righty = right_lane.ally
+    left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
+    right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
     
     # Fit new polynomials to x,y in world space
-    left_fit_cr = np.polyfit(lefty*ym_per_pix, leftx*xm_per_pix, 2)
-    right_fit_cr = np.polyfit(righty*ym_per_pix, rightx*xm_per_pix, 2)
+    left_fit_cr = np.polyfit(ploty*ym_per_pix, left_fitx*xm_per_pix, 2)
+    right_fit_cr = np.polyfit(ploty*ym_per_pix, right_fitx*xm_per_pix, 2)
 
     # Calculate the new radii of curvature
-    left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
-    right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
-    # Now our radius of curvature is in meters
-    curve_radius = round((left_curverad + right_curverad)/2)
+    left_curveradius = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+    right_curveradius = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
     
-    return curve_radius
+    return left_curveradius,right_curveradius
+    
+def compute_offset(binary_warped, left_lane, right_lane):
+
+    left_fit=left_lane.current_fit
+    right_fit=right_lane.current_fit
+    
+    left_fitx = left_fit[0]*binary_warped.shape[0]**2 + left_fit[1]*binary_warped.shape[0] + left_fit[2]
+    right_fitx = right_fit[0]*binary_warped.shape[0]**2 + right_fit[1]*binary_warped.shape[0] + right_fit[2]
+    xm_per_pix = 3.7/700 
+    
+    #center of the image
+    center_img = binary_warped.shape[1]/2
+
+    #cam position respect to the center
+    center_cam = (left_fitx+right_fitx)/2
+    center_pos = (center_img-center_cam)*xm_per_pix    
+    
+    return center_pos
+    
+    
