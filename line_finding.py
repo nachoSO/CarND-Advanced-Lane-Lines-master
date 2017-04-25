@@ -120,7 +120,7 @@ def line_finding_after_sliding(binary_warped,left_lane,right_lane):
     right_fit = right_lane.current_fit
     
     left_lane_inds = ((nonzerox > (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + left_fit[2] - margin)) & (nonzerox < (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + left_fit[2] + margin))) 
-    right_lane_inds = ((nonzerox > (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] - margin)) & (nonzerox < (right_fit[0]*(nonzeroy**2) +right_fit[1]*nonzeroy + right_fit[2] + margin)))  
+    right_lane_inds = ((nonzerox > (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] - margin)) & (nonzerox < (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] + margin)))  
 
     # Again, extract left and right line pixel positions
     left_lane.allx = nonzerox[left_lane_inds]
@@ -131,7 +131,10 @@ def line_finding_after_sliding(binary_warped,left_lane,right_lane):
     # Fit a second order polynomial to each
     left_fit = np.polyfit(left_lane.ally, left_lane.allx, 2)
     right_fit = np.polyfit(right_lane.ally, right_lane.allx, 2)
-
+    # Generate x and y values for plotting
+    ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
+    left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
+    right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
     left_lane.current_fit = left_fit
     right_lane.current_fit = right_fit    
     return left_lane,right_lane
@@ -158,7 +161,7 @@ def draw(binary_warped, left_lane, right_lane, image, Minv):
     cv2.fillPoly(color_warp, np.int_([pts]), (0,255, 0))
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
-    newwarp = cv2.warpPerspective(color_warp, Minv, (binary_warped.shape[1], binary_warped.shape[0])) 
+    newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0])) 
     # Combine the result with the original image
     result = cv2.addWeighted(image, 1, newwarp, 0.3, 0)
     
@@ -203,5 +206,3 @@ def compute_offset(binary_warped, left_lane, right_lane):
     center_pos = (center_img-center_cam)*xm_per_pix    
     
     return center_pos
-    
-    

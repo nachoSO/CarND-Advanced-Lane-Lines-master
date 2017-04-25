@@ -89,12 +89,9 @@ I used a combination of color and gradient thresholds to generate a binary image
 
     combined[(((mag_binary == 1) & (dir_binary == 1))  ) | (s_threshold==1)] = 1
 ```
-First I
-then a di
-and finally is applied a binary combination between the gradient thresholds and the color threshold.
 All the functions that I used are implemented in the file `preprocess.py`.
 
-In the future I would like to improve this part of the project. It is still unclear to me which is the best threshold combination!!
+In the future I would like to improve this part of the project. It is still unclear to me which is the best threshold combination!! (and it is very important!)
 
 Here's an example of my output for this step. 
 
@@ -119,7 +116,7 @@ This is the best combination that I've obtained (I've tried a lot of combination
 
 ## 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform is allocated in the file 'warp.py includes a function called `perspective_transform()`, which appears in lines 1 through 49. The `perspective_transform()` function takes as inputs an image (`img`) and returns the image with the perspective transformed and the inverse transformed in order to draw later the road. I chose the hardcode the source and destination points in the following manner:
+The code for my perspective transform is allocated in the file 'warp.py includes a function called `perspective_transform()`, which appears in lines 1 through 49. The `perspective_transform()` function takes as inputs an image (`img`) and returns the image with the perspective transformed and the inverse transformed in order to draw later the road. I chose to hardcode the source and destination points in the following manner:
 
 ```
     src = np.float32([[220, 700],
@@ -231,7 +228,7 @@ The first step is take the center of the image, then it is necessary to compute 
 
 ## 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step following the tips given in the course, the corresponding im in lines 140 through 165 in my code in `line_finding.py` in the function `draw()`. This function paints the region between the lane lines detected.  Then, lines 64 through 70 in my code in `main.py` in the function `process_image_pipeline` the offset and curvature radius are computed. Here is an example of my result on a test image:
+I implemented this step following the tips given in the course, the corresponding, in lines 140 through 165 in my code in `line_finding.py` in the function `draw()`. This function paints the region between the lane lines detected.  Then, lines 64 through 70 in my code in `main.py` in the function `process_image_pipeline` the offset and curvature radius are computed. Here is an example of my result on a test image:
 
 <p align="center">
    <img src="./output_images/draw_road.jpg" width="60%" height="60%">
