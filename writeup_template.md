@@ -75,19 +75,58 @@ The example provided can be found in the file called camera_cal.py
 ## 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
 I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines 23 through 33 in `main.py`). The process that I followed, is the next:
+## REVISION CHANGES2:
+  The radius detected works bad in my last submission so I've decided to re-model my binarization and warping abstraction.
+  So my binarization consists in the abstraction of the yellow color (R+G), then I applied a threshold on the luminosity-saturation and finally I applied a gradient threshold. Everything combiend to obtained a robust binary image. 
 ```
-    # Apply each of the thresholding functions
-    gradx = pre.abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(20, 100))
-    grady = pre.abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(20, 100))
-    mag_binary = pre.mag_thresh(image, sobel_kernel=ksize, mag_thresh=(40, 100))
-    dir_binary = pre.dir_threshold(image, sobel_kernel=ksize, thresh=(0.7, 1.3))
-
-    #threshold on the saturation channel
-    s_threshold = pre.hls_select(image, thresh=(150, 255))        
+def threshold_pipeline(image):
+    R = image[:,:,0]
+    thresh = (220, 255)
+    binary_R = np.zeros_like(R)
+    binary_R[(R > thresh[0]) & (R <= thresh[1])] = 1
     
-    combined = np.zeros_like(dir_binary)
+    G = image[:,:,1]
+    thresh = (220, 255)
+    binary_G = np.zeros_like(G)
+    binary_G[(G > thresh[0]) & (G <= thresh[1])] = 1
 
-    combined[(((mag_binary == 1) & (dir_binary == 1))  ) | (s_threshold==1)] = 1
+    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    L = hls[:,:,1]
+
+    thresh = (85, 255)
+    binary_L = np.zeros_like(L)
+    binary_L[(L > thresh[0]) & (L <= thresh[1])] = 1
+
+    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    s_channel = hls[:,:,2]
+
+    # Grayscale image
+    # NOTE: we already saw that standard grayscaling lost color information for the lane lines
+    # Explore gradients in other colors spaces / color channels to see what might work better
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    # Sobel x
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0) # Take the derivative in x
+    abs_sobelx = np.absolute(sobelx) # Absolute x derivative to accentuate lines away from horizontal
+    scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx))
+
+    # Threshold x gradient
+    thresh_min = 35
+    thresh_max = 100
+    sxbinary = np.zeros_like(scaled_sobel)
+    sxbinary[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
+
+    # Threshold color channel
+    s_thresh_min = 170
+    s_thresh_max = 255
+    s_binary = np.zeros_like(s_channel)
+    s_binary[(s_channel >= s_thresh_min) & (s_channel <= s_thresh_max)] = 1
+
+    # Combine the two binary thresholds
+    combined = np.zeros_like(sxbinary)
+    combined[(s_binary == 1) | (sxbinary == 1) | ((binary_G==1) & (binary_R==1))] = 1
+    combined=combined*binary_L
+    return combined
 ```
 All the functions that I used are implemented in the file `preprocess.py`.
 
@@ -118,7 +157,7 @@ This is the best combination that I've obtained (I've tried a lot of combination
 
 The code for my perspective transform is allocated in the file 'warp.py includes a function called `perspective_transform()`, which appears in lines 1 through 49. The `perspective_transform()` function takes as inputs an image (`img`) and returns the image with the perspective transformed and the inverse transformed in order to draw later the road. I chose to hardcode the source and destination points in the following manner:
 
-```
+``` Previous submission
     src = np.float32([[220, 700],
                       [555, 470],
                       [730, 470],
@@ -139,6 +178,21 @@ This resulted in the following source and destination points:
 | 555, 470      | 212, 0        |
 | 730, 470      | 1086, 0       |
 | 1090, 700     | 1086, 700     |
+
+# Changes:
+``` Actual submission
+    src = np.float32([[220, 700],
+                      [555, 455],
+                      [730, 455],
+                      [1090, 700]])
+
+    # Choose x positions that allow for 3.7m for the lane position closest to car.
+    dst = np.float32([[ 212,  700],
+                      [ 212,    0],
+                      [ 1086,    0],
+                      [ 1086,  700]])
+
+```
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image as can be seen in the next image.
 
@@ -195,7 +249,7 @@ def measure_curvature(binary_warped, left_lane, right_lane):
     # Fit new polynomials to x,y in world space
     left_fit_cr = np.polyfit(ploty*ym_per_pix, left_fitx*xm_per_pix, 2)
     right_fit_cr = np.polyfit(ploty*ym_per_pix, right_fitx*xm_per_pix, 2)
-
+    
     # Calculate the new radii of curvature
     left_curveradius = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
     right_curveradius = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
