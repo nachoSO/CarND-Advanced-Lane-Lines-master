@@ -18,19 +18,16 @@ def process_image_pipeline(image):
     ksize = 3 # Choose a larger odd number to smooth gradient measurements
     image = cc.calibrate_image(image)
     window = image[0:, :, :]
-    # Apply each of the thresholding functions
-    gradx = pre.abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(20, 100))
-    grady = pre.abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(20, 100))
-    mag_binary = pre.mag_thresh(image, sobel_kernel=9, mag_thresh=(30, 100))
-    dir_binary = pre.dir_threshold(image, sobel_kernel=15, thresh=(0.7, 1.3))
+    
+    combined=pre.threshold_pipeline(image)
 
-    ylw = pre.extract_yellow(window)
-    highlights = pre.extract_highlights(window[:, :, 0])
-
-    combined = np.zeros_like(dir_binary)
-    combined[((gradx == 1) & (grady == 1)) | (ylw == 255) | 
-    (highlights == 255) |((mag_binary == 1) & (dir_binary == 1))] = 1
-
+    # f, ax1 = plt.subplots(1, 1, figsize=(24, 9))
+    # f.tight_layout()
+    # ax1.imshow(combined, cmap='gray')
+    # ax1.set_title('Original Image', fontsize=50)
+    # plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)    
+    # plt.show()
+    
     global left_lane, right_lane,first_time,frame_counter,curve_radius_left,curve_radius_right,offset
     warped,Minv=w.perspective_transform(combined)
 
@@ -38,11 +35,11 @@ def process_image_pipeline(image):
         left_lane, right_lane = lf.sliding_line_finding(warped)
     else:
         left_lane, right_lane = lf.line_finding_after_sliding(warped, left_lane, right_lane)
-        
+    
     first_time=False
     img=lf.draw(warped, left_lane, right_lane, image, Minv)
     
-    if(frame_counter>=15):
+    if(frame_counter>=10):
         curve_radius_left,curve_radius_right = lf.measure_curvature(warped,left_lane,right_lane)
         offset = lf.compute_offset(warped, left_lane, right_lane)
         frame_counter=0
@@ -53,9 +50,8 @@ def process_image_pipeline(image):
     str_offset='right'
     if(offset<=0):
         str_offset='left'
-    #Draw offset & radius
-    img = cv2.putText(img, 'Radius of curvature left: '+str(round(curve_radius_left,3))+' m'+' | right: '+str(round(curve_radius_right,3))
-    +' m', (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+    avg_curve_radius = np.mean([curve_radius_left + curve_radius_right])
+    img = cv2.putText(img, 'Radius of curvature : '+str(round(avg_curve_radius,3))+' m', (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
     img = cv2.putText(img, 'Offset: '+str(abs(round(offset,3)))+'m '+str_offset+' of center', (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
     return img
     
@@ -63,9 +59,17 @@ def main():
     global first_time,frame_counter
     frame_counter=15
     first_time=True
+
     clip = VideoFileClip('project_video.mp4').fl_image(process_image_pipeline)
     clip.write_videofile('out_project_video.mp4', audio=False, verbose=False)
-    
+    # img = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/test_images/test2.jpg')
+    # img = process_image_pipeline(img)
+    # f, ax1 = plt.subplots(1, 1, figsize=(24, 9))
+    # f.tight_layout()
+    # ax1.imshow(img,cmap='brg')
+    # ax1.set_title('Original Image', fontsize=50)  
+    # plt.show()
+
 if __name__ == "__main__":
     main()   
 

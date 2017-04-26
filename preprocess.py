@@ -62,17 +62,54 @@ def dir_threshold(image, sobel_kernel=3, thresh=(0, np.pi/2)):
     # 6) Return this mask as your dir_binary image
     return dir_binary
     
-def extract_yellow(img):
-    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    mask = cv2.inRange(hsv, (20, 50, 150), (40, 255, 255))
+def threshold_pipeline(image):
+    R = image[:,:,0]
+    thresh = (220, 255)
+    binary_R = np.zeros_like(R)
+    binary_R[(R > thresh[0]) & (R <= thresh[1])] = 1
+    
+    G = image[:,:,1]
+    thresh = (220, 255)
+    binary_G = np.zeros_like(G)
+    binary_G[(G > thresh[0]) & (G <= thresh[1])] = 1
+    
+    
+    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    L = hls[:,:,1]
 
-    return mask
+    thresh = (85, 255)
+    binary_L = np.zeros_like(L)
+    binary_L[(L > thresh[0]) & (L <= thresh[1])] = 1
 
+    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    s_channel = hls[:,:,2]
 
-def extract_highlights(img, p=99.9):
-    p = int(np.percentile(img, p) - 30)
-    mask = cv2.inRange(img, p, 255)
-    return mask
- 
+    # Grayscale image
+    # NOTE: we already saw that standard grayscaling lost color information for the lane lines
+    # Explore gradients in other colors spaces / color channels to see what might work better
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    # Sobel x
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0) # Take the derivative in x
+    abs_sobelx = np.absolute(sobelx) # Absolute x derivative to accentuate lines away from horizontal
+    scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx))
+
+    # Threshold x gradient
+    thresh_min = 35
+    thresh_max = 100
+    sxbinary = np.zeros_like(scaled_sobel)
+    sxbinary[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
+
+    # Threshold color channel
+    s_thresh_min = 170
+    s_thresh_max = 255
+    s_binary = np.zeros_like(s_channel)
+    s_binary[(s_channel >= s_thresh_min) & (s_channel <= s_thresh_max)] = 1
+
+    # Combine the two binary thresholds
+    combined = np.zeros_like(sxbinary)
+    combined[(s_binary == 1) | (sxbinary == 1) | ((binary_G==1) & (binary_R==1))] = 1
+    combined=combined*binary_L
+    return combined
 
 

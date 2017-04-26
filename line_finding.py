@@ -54,7 +54,7 @@ def sliding_line_finding(binary_warped):
     leftx_current = leftx_base
     rightx_current = rightx_base
     # Set the width of the windows +/- margin
-    margin = 100
+    margin = 80
     # Set minimum number of pixels found to recenter window
     minpix = 50
     # Create empty lists to receive left and right lane pixel indices
@@ -166,6 +166,7 @@ def draw(binary_warped, left_lane, right_lane, image, Minv):
     result = cv2.addWeighted(image, 1, newwarp, 0.3, 0)
     
     return result
+
     
 def measure_curvature(binary_warped, left_lane, right_lane):
 
@@ -182,13 +183,14 @@ def measure_curvature(binary_warped, left_lane, right_lane):
     # Fit new polynomials to x,y in world space
     left_fit_cr = np.polyfit(ploty*ym_per_pix, left_fitx*xm_per_pix, 2)
     right_fit_cr = np.polyfit(ploty*ym_per_pix, right_fitx*xm_per_pix, 2)
-
+    
     # Calculate the new radii of curvature
     left_curveradius = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
     right_curveradius = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
     
     return left_curveradius,right_curveradius
     
+
 def compute_offset(binary_warped, left_lane, right_lane):
 
     left_fit=left_lane.current_fit

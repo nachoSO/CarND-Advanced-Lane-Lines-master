@@ -9,8 +9,8 @@ def perspective_transform(img):
     img_size = (img.shape[1], img.shape[0])
 
     src = np.float32([[220, 700],
-                      [555, 470],
-                      [730, 470],
+                      [555, 455],
+                      [730, 455],
                       [1090, 700]])
 
     # Choose x positions that allow for 3.7m for the lane position closest to car.
@@ -19,14 +19,6 @@ def perspective_transform(img):
                       [ 1086,    0],
                       [ 1086,  700]])
                       
-    color=[0, 255, 0]
-    th=3
-    cv2.line(img, (220,700), (1090,700), color, th)
-    cv2.line(img, (220,700), (555, 470), color, th)
-    cv2.line(img, (555, 470), (730, 470), color, th)
-    cv2.line(img, (1090,700), (730, 470), color, th)
-
-
     M = cv2.getPerspectiveTransform(src, dst)
     Minv = cv2.getPerspectiveTransform(dst,src)
 
@@ -49,7 +41,7 @@ def perspective_transform(img):
     return warped,Minv
     
 def main():
-    img_warp = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/test_images/test2.jpg')
+    img_warp = cv2.imread('C:/Users/LPC/Documents/GitHub/CarND-Advanced-Lane-Lines-master/test_images/2.jpg')
     perspective_transform(img_warp)
     
 if __name__ == "__main__":
